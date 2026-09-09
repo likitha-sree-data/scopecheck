@@ -13,15 +13,13 @@ that audit corporate net-zero pledges (e.g. the New Climate Institute's
 Corporate Climate Responsibility Monitor) actually evaluate claims.
 The point isn't "is this claim true," which no automated tool can
 verify, it's "is this claim written in a way that COULD be verified."
-A claim that fails most of these criteria isn't necessarily false, but
-it's unfalsifiable as written, which is the definition of a weak claim.
 
 Scope note: this rubric only covers emissions-reduction and net-zero
 claims. It intentionally does not attempt to cover water use, DEI,
 supply chain labor, or other ESG claim types. See README for why.
 """
 
-RUBRIC_VERSION = "0.1.0"
+RUBRIC_VERSION = "0.2.0"
 
 CRITERIA = [
     {
@@ -35,8 +33,6 @@ CRITERIA = [
             "Cherry-picking a high-emissions base year is one of the most "
             "common ways to inflate a reduction percentage."
         ),
-        "met_example": "\"a 42% reduction in Scope 1 and 2 emissions since our 2019 baseline\"",
-        "weak_example": "\"we've significantly reduced our emissions over the years\"",
     },
     {
         "id": "scope_specificity",
@@ -49,12 +45,8 @@ CRITERIA = [
         "why_it_matters": (
             "Scope 3 is usually 70-90% of a company's total footprint for "
             "non-industrial companies, and it's also the hardest to measure "
-            "and the easiest to leave out. A claim that says \"emissions\" "
-            "with no scope breakdown is very often a Scope 1+2 only claim "
-            "wearing a bigger number's clothing."
+            "and the easiest to leave out."
         ),
-        "met_example": "\"a 15% reduction in Scope 1 and Scope 2 emissions; Scope 3 reporting begins next fiscal year\"",
-        "weak_example": "\"our total emissions are down 15%\"",
     },
     {
         "id": "absolute_vs_intensity",
@@ -68,13 +60,8 @@ CRITERIA = [
         "why_it_matters": (
             "A company can report an improving emissions intensity while "
             "its absolute emissions are still rising, simply by growing "
-            "revenue or output faster than it improves efficiency. "
-            "Intensity-only claims, with no absolute figure alongside, are "
-            "a well-documented way to describe worsening climate impact "
-            "using improving-sounding numbers."
+            "revenue or output faster than it improves efficiency."
         ),
-        "met_example": "\"emissions intensity improved 12% per unit of revenue; absolute Scope 1+2 emissions grew 3% due to production expansion\"",
-        "weak_example": "\"our carbon intensity improved 12% this year\"",
     },
     {
         "id": "third_party_verification",
@@ -89,10 +76,8 @@ CRITERIA = [
             "Self-reported, unaudited figures are the norm, not the "
             "exception, but a claim that names a specific verifier or "
             "standard is materially harder to fabricate or quietly revise "
-            "later than an unverified internal number."
+            "later."
         ),
-        "met_example": "\"verified by [Auditor] under ISO 14064-3; targets validated by the Science Based Targets initiative\"",
-        "weak_example": "\"we are proud of the progress we've made\" (no verification mentioned anywhere in the report)",
     },
     {
         "id": "time_bound_target",
@@ -105,11 +90,8 @@ CRITERIA = [
         "why_it_matters": (
             "\"Net zero by 2050\" with no interim milestones lets a company "
             "defer all real action for decades while claiming climate "
-            "leadership today. A credible target has near-term checkpoints "
-            "that make backsliding visible before it's too late to matter."
+            "leadership today."
         ),
-        "met_example": "\"net zero by 2040, with a 50% absolute reduction target by 2030\"",
-        "weak_example": "\"committed to achieving net zero emissions\"",
     },
     {
         "id": "offset_disclosure",
@@ -122,12 +104,8 @@ CRITERIA = [
         "why_it_matters": (
             "\"Net\" is doing a lot of work in \"net zero.\" A target that's "
             "60% offset-reliant is a fundamentally different, and much "
-            "weaker, claim than one that's 90% real reduction. Reports that "
-            "use \"net zero\" or \"carbon neutral\" without ever mentioning "
-            "offsets are usually hiding a heavy reliance on them."
+            "weaker, claim than one that's 90% real reduction."
         ),
-        "met_example": "\"85% of the reduction comes from operational changes; the remaining 15% is addressed through verified carbon removal credits\"",
-        "weak_example": "\"we achieved carbon neutrality across our operations\" (no mention of offsets anywhere)",
     },
     {
         "id": "methodology_reference",
@@ -143,22 +121,32 @@ CRITERIA = [
             "methodology changed between reporting years to flatter the "
             "trend line."
         ),
-        "met_example": "\"calculated in accordance with the GHG Protocol Corporate Standard\"",
-        "weak_example": "\"using our internal sustainability tracking methodology\"",
     },
 ]
 
 RISK_TIERS = {
-    "green": {"min_met": 6, "label": "Well-substantiated", "max_met": 7},
-    "yellow": {"min_met": 3, "label": "Partially substantiated", "max_met": 5},
-    "red": {"min_met": 0, "label": "Weak / unverifiable as written", "max_met": 2},
+    "green": {"min_ratio": 0.8, "label": "Well-substantiated"},
+    "yellow": {"min_ratio": 0.4, "label": "Partially substantiated"},
+    "red": {"min_ratio": 0.0, "label": "Weak / unverifiable as written"},
 }
 
 
-def score_tier(criteria_met_count: int) -> str:
-    """Map a count of criteria met (0-7) to a risk tier key."""
-    if criteria_met_count >= RISK_TIERS["green"]["min_met"]:
+def score_tier(ratio: float) -> str:
+    """
+    Map a met-points-to-applicable-criteria ratio (0.0-1.0) to a risk
+    tier. Criteria marked not_applicable for a given claim are excluded
+    from the ratio, so a claim isn't penalized for a criterion that
+    never applied to it in the first place.
+    """
+    if ratio >= RISK_TIERS["green"]["min_ratio"]:
         return "green"
-    if criteria_met_count >= RISK_TIERS["yellow"]["min_met"]:
+    if ratio >= RISK_TIERS["yellow"]["min_ratio"]:
         return "yellow"
     return "red"
+
+
+if __name__ == "__main__":
+    for c in CRITERIA:
+        print(f"[{c['id']}] {c['name']}")
+        print(f"  Q: {c['question']}")
+        print()
