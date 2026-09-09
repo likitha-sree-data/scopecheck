@@ -4,6 +4,8 @@ extraction.py
 Step 1 of the ScopeCheck pipeline: given the raw text of a sustainability
 report, extract every quantified emissions-reduction or net-zero claim,
 along with the exact sentence it came from.
+
+This step does NOT judge the claims, that's scoring.py's job.
 """
 
 import json
@@ -65,6 +67,7 @@ Do NOT include:
 - Vague statements with no number and no target date ("we care about the environment")
 - Claims about water, waste, biodiversity, DEI, or other non-emissions topics
 - General mission statements
+- Renewable energy adoption or energy-mix percentages ("X% of our electricity comes from renewable sources") UNLESS that sentence also states a specific emissions reduction number, since renewable energy share is a different metric from emissions themselves
 
 For each claim found, extract it exactly as it appears (source_sentence must be a verbatim quote from the text below, not a paraphrase), plus a short plain-language summary and a claim_type.
 
@@ -82,6 +85,7 @@ def extract_claims(report_text: str, model: str = EXTRACTION_MODEL) -> list[dict
     response = client.messages.create(
         model=model,
         max_tokens=4096,
+        temperature=0,
         tools=[EXTRACTION_TOOL],
         tool_choice={"type": "tool", "name": "record_claims"},
         messages=[
