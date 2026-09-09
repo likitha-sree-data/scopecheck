@@ -85,7 +85,6 @@ def extract_claims(report_text: str, model: str = EXTRACTION_MODEL) -> list[dict
     response = client.messages.create(
         model=model,
         max_tokens=4096,
-        temperature=0,
         tools=[EXTRACTION_TOOL],
         tool_choice={"type": "tool", "name": "record_claims"},
         messages=[

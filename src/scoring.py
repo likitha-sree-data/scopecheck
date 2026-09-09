@@ -80,7 +80,6 @@ def score_claim(claim: dict, model: str = SCORING_MODEL) -> dict:
     response = client.messages.create(
         model=model,
         max_tokens=2048,
-        temperature=0,
         tools=[SCORING_TOOL],
         tool_choice={"type": "tool", "name": "record_assessment"},
         messages=[{"role": "user", "content": prompt}],
